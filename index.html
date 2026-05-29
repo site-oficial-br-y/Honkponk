@@ -1102,7 +1102,10 @@ function searchOverpass(s,w,n,e,tag,cityName){
 function renderResults(elements){
   if(!elements.length){setResults('<div class="no-results">Nenhum resultado.</div>');return;}
   var meta=SERVICE_META[quizData.service]||SERVICE_META.outros;
-  var html=elements.map(function(el){
+  var html=elements.filter(function(el){
+    var name=el.tags&&(el.tags.name||el.tags['name:pt']);
+    return !!name;
+  }).map(function(el){
     var t=el.tags||{};
     var name=t.name||t['name:pt']||'Negócio sem nome';
     var addr=buildAddr(t);
@@ -1137,8 +1140,6 @@ function renderResults(elements){
     var btns='';
     if(phone){
       btns+='<a class="result-btn wa" href="'+waLink+'" target="_blank" rel="noopener">💬 WhatsApp</a>';
-    } else {
-      btns+='<span class="result-btn wa" style="opacity:.35;cursor:default">💬 Sem telefone</span>';
     }
     if(igLink){
       btns+='<a class="result-btn ig" href="'+igLink+'" target="_blank" rel="noopener">📸 Instagram</a>';
