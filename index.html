@@ -267,6 +267,10 @@ section{padding:90px 24px}
 .result-btn.wa:hover{background:#1da851}
 .result-btn.web{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
 .result-btn.web:hover{background:rgba(255,255,255,.18)}
+.result-btn.ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
+.result-btn.ig:hover{opacity:.85}
+.result-btn.tel{background:rgba(74,222,128,.12);color:#4ade80}
+.result-btn.tel:hover{background:rgba(74,222,128,.22)}
 .result-btn.wa.disabled{opacity:.35;cursor:default;pointer-events:none}
 .no-results{text-align:center;padding:32px;color:rgba(255,255,255,.3);font-size:.9rem;grid-column:1/-1}
 .filter-info{
@@ -877,30 +881,54 @@ window.addEventListener('scroll',function(){
 var quizData={service:'',city:'',segment:''};
 
 var SERVICE_META={
-  sites:    {name:'Criação de Sites',    icon:'🌐', filterLabel:'Somente empresas SEM site cadastrado',
-             filterFn:function(t){return !t.website&&!t['contact:website'];},
-             waMsg:function(name){return 'Olá, '+name+'! Vi que seu negócio ainda não tem um site. Posso criar um para você com ótimo custo-benefício e ajudar a atrair mais clientes online. Posso te mostrar um exemplo?';}},
-  marketing:{name:'Marketing Digital',   icon:'📱', filterLabel:'Empresas com baixa presença digital (sem website ou redes)',
-             filterFn:function(t){return !t.website&&!t['contact:website']&&!t['contact:instagram']&&!t['contact:facebook'];},
-             waMsg:function(name){return 'Olá, '+name+'! Trabalho com marketing digital e percebi que seu negócio pode crescer muito mais online. Posso te mostrar como atrair mais clientes pela internet?';}},
-  design:   {name:'Design Gráfico',      icon:'🎨', filterLabel:'Todos os negócios (potencial para identidade visual)',
-             filterFn:function(){return true;},
-             waMsg:function(name){return 'Olá, '+name+'! Sou designer gráfico e gostaria de propor uma identidade visual profissional para seu negócio. Posso te enviar alguns exemplos do meu trabalho?';}},
-  contabilidade:{name:'Contabilidade',   icon:'📊', filterLabel:'Micro e pequenas empresas (sem contador visível)',
-             filterFn:function(t){return !t['operator:type']||t['operator:type']==='private';},
-             waMsg:function(name){return 'Olá, '+name+'! Sou contador e ofereço serviços de contabilidade para pequenas empresas com preço justo. Posso te apresentar minha proposta?';}},
-  software: {name:'Software / Sistemas', icon:'💻', filterLabel:'Negócios que precisam de sistema de gestão (sem software visível)',
-             filterFn:function(){return true;},
-             waMsg:function(name){return 'Olá, '+name+'! Desenvolvo sistemas de gestão para negócios como o seu. Controle de estoque, vendas, agendamentos e muito mais. Posso te mostrar como funciona?';}},
-  foto:     {name:'Foto / Vídeo',        icon:'📷', filterLabel:'Restaurantes, hotéis, clínicas e negócios com apelo visual',
-             filterFn:function(){return true;},
-             waMsg:function(name){return 'Olá, '+name+'! Sou fotógrafo profissional e adoraria fazer um ensaio para o seu negócio. Fotos de qualidade fazem toda a diferença para atrair clientes. Posso te enviar meu portfólio?';}},
-  rh:       {name:'RH / Recrutamento',   icon:'👥', filterLabel:'Empresas em crescimento com múltiplos funcionários',
-             filterFn:function(t){return !!(t.name);},
-             waMsg:function(name){return 'Olá, '+name+'! Trabalho com recrutamento e seleção para pequenas e médias empresas. Posso ajudar seu negócio a encontrar os melhores profissionais. Podemos conversar?';}},
-  outros:   {name:'Outro serviço',       icon:'✨', filterLabel:'Todos os resultados disponíveis',
-             filterFn:function(){return true;},
-             waMsg:function(name){return 'Olá, '+name+'! Tenho uma proposta que pode ajudar muito seu negócio. Podemos conversar alguns minutos?';}}
+  sites:{name:'Criação de Sites',icon:'🌐',
+    filterLabel:'Somente empresas SEM site cadastrado',
+    filterFn:function(t){return !t.website&&!t['contact:website'];},
+    showSiteTag:false,
+    waMsg:function(name){return 'Olá, '+name+'! Vi que seu negócio ainda não tem um site. Posso criar um para você com ótimo custo-benefício e ajudar a atrair mais clientes online. Posso te mostrar um exemplo?';}
+  },
+  marketing:{name:'Marketing Digital',icon:'📱',
+    filterLabel:'Empresas sem presença digital (sem site, Instagram ou Facebook)',
+    filterFn:function(t){return !t.website&&!t['contact:website']&&!t['contact:instagram']&&!t['contact:facebook'];},
+    showSiteTag:false,
+    waMsg:function(name){return 'Olá, '+name+'! Trabalho com marketing digital e percebi que seu negócio pode crescer muito mais online. Posso te mostrar como atrair mais clientes pela internet?';}
+  },
+  design:{name:'Design Gráfico',icon:'🎨',
+    filterLabel:'Todos os negócios (qualquer empresa pode precisar de design)',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Sou designer gráfico e gostaria de propor uma identidade visual profissional para seu negócio. Posso te enviar alguns exemplos do meu trabalho?';}
+  },
+  contabilidade:{name:'Contabilidade',icon:'📊',
+    filterLabel:'Micro e pequenas empresas',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Sou contador e ofereço serviços de contabilidade para pequenas empresas com preço justo. Posso te apresentar minha proposta?';}
+  },
+  software:{name:'Software / Sistemas',icon:'💻',
+    filterLabel:'Negócios que podem precisar de sistema de gestão',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Desenvolvo sistemas de gestão para negócios como o seu — controle de estoque, vendas e agendamentos. Posso te mostrar como funciona?';}
+  },
+  foto:{name:'Foto / Vídeo',icon:'📷',
+    filterLabel:'Todos os negócios com apelo visual',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Sou fotógrafo profissional e adoraria fazer um ensaio para o seu negócio. Fotos de qualidade fazem toda a diferença para atrair clientes. Posso te enviar meu portfólio?';}
+  },
+  rh:{name:'RH / Recrutamento',icon:'👥',
+    filterLabel:'Todos os negócios',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Trabalho com recrutamento e seleção para pequenas e médias empresas. Posso ajudar seu negócio a encontrar os melhores profissionais. Podemos conversar?';}
+  },
+  outros:{name:'Outro serviço',icon:'✨',
+    filterLabel:'Todos os resultados disponíveis',
+    filterFn:function(){return true;},
+    showSiteTag:true,
+    waMsg:function(name){return 'Olá, '+name+'! Tenho uma proposta que pode ajudar muito seu negócio. Podemos conversar alguns minutos?';}
+  }
 };
 
 var SEGMENT_NAMES={
@@ -1078,29 +1106,55 @@ function renderResults(elements){
     var t=el.tags||{};
     var name=t.name||t['name:pt']||'Negócio sem nome';
     var addr=buildAddr(t);
-    var phone=t.phone||t['contact:phone']||t['contact:mobile']||'';
+    var phone=(t.phone||t['contact:phone']||t['contact:mobile']||'').replace(/\s+/g,'');
     var website=t.website||t['contact:website']||'';
-    phone=phone.replace(/\s+/g,'');
+    var instagram=t['contact:instagram']||t['social:instagram']||'';
+    var facebook=t['contact:facebook']||t['social:facebook']||'';
 
+    // Tags informativas
     var tags=[];
-    if(!website&&!t['contact:website']){tags.push({cls:'no-site',txt:'Sem site'});}
-    else{tags.push({cls:'has-site',txt:'Tem site'});}
+    if(meta.showSiteTag){
+      if(website){tags.push({cls:'has-site',txt:'✓ Tem site'});}
+      else{tags.push({cls:'no-site',txt:'Sem site'});}
+    } else {
+      // para serviços onde filtramos sem site, só mostrar se não tem
+      if(!website){tags.push({cls:'no-site',txt:'Sem site'});}
+    }
+    if(instagram)tags.push({cls:'has-site',txt:'📸 Instagram'});
     if(t.opening_hours)tags.push({cls:'',txt:'🕐 '+t.opening_hours.split(';')[0]});
-    if(t.cuisine)tags.push({cls:'',txt:'🍽 '+t.cuisine.replace(/_/g,' ')});
 
+    // WhatsApp
     var waNum=phone.replace(/[^0-9]/g,'');
     var waFull=waNum.startsWith('55')?waNum:'55'+waNum;
     var waMsg=meta.waMsg(name);
-    var waLink='https://wa.me/'+(waFull||'5511999999999')+'?text='+encodeURIComponent(waMsg);
+    var waLink='https://wa.me/'+waFull+'?text='+encodeURIComponent(waMsg);
+
+    // Instagram link
+    var igHandle=instagram.replace(/^@/,'').replace(/.*instagram\.com\//,'').replace(/\//,'');
+    var igLink=igHandle?'https://instagram.com/'+igHandle:'';
+
+    // Botões de contato
+    var btns='';
+    if(phone){
+      btns+='<a class="result-btn wa" href="'+waLink+'" target="_blank" rel="noopener">💬 WhatsApp</a>';
+    } else {
+      btns+='<span class="result-btn wa" style="opacity:.35;cursor:default">💬 Sem telefone</span>';
+    }
+    if(igLink){
+      btns+='<a class="result-btn ig" href="'+igLink+'" target="_blank" rel="noopener">📸 Instagram</a>';
+    }
+    if(website){
+      btns+='<a class="result-btn web" href="'+safeUrl(website)+'" target="_blank" rel="noopener">🌐 Site</a>';
+    }
+    if(phone&&!igLink){
+      btns+='<a class="result-btn tel" href="tel:'+escHtml(phone)+'">📞 Ligar</a>';
+    }
 
     return '<div class="result-card">'
       +'<div class="result-name">'+escHtml(name)+'</div>'
       +(addr?'<div class="result-addr">📍 '+escHtml(addr)+'</div>':'')
       +'<div class="result-tags">'+tags.map(function(tg){return '<span class="result-tag '+tg.cls+'">'+escHtml(tg.txt)+'</span>';}).join('')+'</div>'
-      +'<div class="result-contact">'
-      +(phone?'<a class="result-btn wa" href="'+waLink+'" target="_blank" rel="noopener">💬 WhatsApp</a>':'<span class="result-btn wa disabled">💬 WhatsApp</span>')
-      +(website?'<a class="result-btn web" href="'+safeUrl(website)+'" target="_blank" rel="noopener">🌐 Site</a>':'')
-      +'</div>'
+      +'<div class="result-contact">'+btns+'</div>'
       +'</div>';
   }).join('');
   setResults(html);
