@@ -878,7 +878,16 @@ window.addEventListener('scroll',function(){
 });
 
 // ── QUIZ STATE ──
-var quizData={service:'',city:'',segment:''};
+var quizData={service:'',city:'',segment:'',allBrazil:false};
+var GPLACES_KEY='AIzaSyCQi9LgwrPTNZA1PwoIcIvJkeYKs2_KeFc';
+
+var SEGMENT_QUERIES={
+  restaurant:'restaurantes',beauty:'salões de beleza',car_repair:'oficinas mecânicas',
+  clinic:'clínicas médicas',gym:'academias',pharmacy:'farmácias',
+  hotel:'hotéis',supermarket:'supermercados',bakery:'padarias',
+  bar:'bares',dentist:'dentistas consultórios odontológicos',school:'escolas',
+  lawyer:'escritórios de advocacia',accounting:'escritórios de contabilidade',clothing:'lojas de roupa'
+};
 
 var SERVICE_META={
   sites:{name:'Criação de Sites',icon:'🌐',
@@ -1041,62 +1050,97 @@ function doSearch(){
   setResults('');
   document.getElementById('filterInfo').innerHTML='';
 
-  if(quizData.allBrazil){
-    // Bounding box do Brasil inteiro
-    setStatus('<span class="spinner"></span> Buscando em <strong>todo o Brasil</strong>... (pode levar alguns segundos)');
-    searchOverpass(-33.75,-73.99,5.27,-28.84,OSM_TAGS[quizData.segment]||'[amenity=restaurant]','Brasil');
-    return;
-  }
+  var segQuery=SEGMENT_QUERIES[quizData.segment]||quizData.segment;
+  var locationStr=quizData.allBrazil?'Brasil':(quizData.city+', Brasil');
+  var textQuery=segQuery+' em '+locationStr;
 
-  setStatus('<span class="spinner"></span> Localizando <strong>'+escHtml(quizData.city)+'</strong>...');
-  var nominatimUrl='https://nominatim.openstreetmap.org/search?q='
-    +encodeURIComponent(quizData.city+', Brasil')
-    +'&format=json&limit=1&addressdetails=1';
+  setStatus('<span class="spinner"></span> Buscando <strong>'+escHtml(segQuery)+'</strong> em <strong>'+escHtml(quizData.allBrazil?'todo o Brasil':quizData.city)+'</strong>...');
 
-  fetch(nominatimUrl,{headers:{'Accept-Language':'pt-BR,pt;q=0.9','User-Agent':'HonkPonk/1.0'}})
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(!data||!data.length){setStatus('Cidade não encontrada. Tente outro nome.');return;}
-      var bb=data[0].boundingbox;
-      var s=parseFloat(bb[0]),n=parseFloat(bb[1]),w=parseFloat(bb[2]),e=parseFloat(bb[3]);
-      var tag=OSM_TAGS[quizData.segment]||'[amenity=restaurant]';
-      var cityName=data[0].display_name.split(',')[0];
-      setStatus('<span class="spinner"></span> Buscando negócios em <strong>'+escHtml(cityName)+'</strong>...');
-      searchOverpass(s,w,n,e,tag,cityName);
+  fetch('https://places.googleapis.com/v1/places:searchText',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'X-Goog-Api-Key':GPLACES_KEY,
+      'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.types'
+    },
+    body:JSON.stringify({
+      textQuery:textQuery,
+      languageCode:'pt-BR',
+      maxResultCount:20
     })
-    .catch(function(){setStatus('Erro ao localizar a cidade. Verifique sua conexão.');});
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var places=data.places||[];
+    if(!places.length){
+      setStatus('Nenhum resultado encontrado. Tente outra cidade ou segmento.');
+      return;
+    }
+    var meta=SERVICE_META[quizData.service]||SERVICE_META.outros;
+    var filtered=places.filter(function(p){
+      return meta.filterFn({
+        website:p.websiteUri,
+        'contact:website':p.websiteUri
+      });
+    });
+    var removed=places.length-filtered.length;
+    setStatus('✓ <strong>'+filtered.length+'</strong> leads qualificados encontrados em <strong>'+escHtml(quizData.allBrazil?'todo o Brasil':quizData.city)+'</strong>');
+    if(removed>0){
+      document.getElementById('filterInfo').innerHTML=
+        '🎯 <span>'+removed+'</span> empresa'+(removed>1?'s':'')+' removida'+(removed>1?'s':'')+' pelo filtro (já possui o serviço que você oferece).';
+    }
+    if(!filtered.length){
+      setResults('<div class="no-results">Nenhum lead qualificado após o filtro.<br/>Tente outro segmento ou cidade.</div>');
+      return;
+    }
+    renderResultsGP(filtered);
+  })
+  .catch(function(err){
+    setStatus('Erro na busca. Verifique sua conexão e tente novamente.');
+    console.error(err);
+  });
 }
 
-function searchOverpass(s,w,n,e,tag,cityName){
-  var query='[out:json][timeout:25];(node'+tag+'('+s+','+w+','+n+','+e+');way'+tag+'('+s+','+w+','+n+','+e+'););out center 100;';
-  var url='https://overpass-api.de/api/interpreter?data='+encodeURIComponent(query);
+function renderResultsGP(places){
+  if(!places.length){setResults('<div class="no-results">Nenhum resultado.</div>');return;}
+  var meta=SERVICE_META[quizData.service]||SERVICE_META.outros;
+  var html=places.map(function(p){
+    var name=p.displayName&&p.displayName.text||'Sem nome';
+    var addr=p.formattedAddress||'';
+    var phone=p.nationalPhoneNumber||'';
+    var website=p.websiteUri||'';
+    var rating=p.rating||0;
+    var reviews=p.userRatingCount||0;
+    var isOpen=p.regularOpeningHours&&p.regularOpeningHours.openNow;
 
-  fetch(url)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      var elements=data.elements||[];
-      if(!elements.length){
-        setStatus('Nenhum resultado encontrado em '+cityName+'. Tente outra cidade ou segmento.');
-        return;
-      }
-      var meta=SERVICE_META[quizData.service]||SERVICE_META.outros;
-      var filtered=elements.filter(function(el){return meta.filterFn(el.tags||{});});
-      var total=elements.length;
-      var kept=filtered.length;
-      var removed=total-kept;
+    var tags=[];
+    if(meta.showSiteTag){
+      tags.push(website?{cls:'has-site',txt:'✓ Tem site'}:{cls:'no-site',txt:'Sem site'});
+    } else {
+      if(!website)tags.push({cls:'no-site',txt:'Sem site'});
+    }
+    if(rating>0)tags.push({cls:'',txt:'⭐ '+rating.toFixed(1)+' ('+reviews+')'});
+    if(isOpen===true)tags.push({cls:'has-site',txt:'✓ Aberto agora'});
+    else if(isOpen===false)tags.push({cls:'no-site',txt:'Fechado agora'});
 
-      setStatus('✓ <strong>'+kept+'</strong> leads qualificados encontrados em <strong>'+escHtml(cityName)+'</strong>');
-      if(removed>0){
-        document.getElementById('filterInfo').innerHTML=
-          '🎯 <span>'+removed+'</span> empresa'+(removed>1?'s':'')+' removida'+(removed>1?'s':'')+' pelo filtro inteligente (já '+(removed>1?'possuem':'possui')+' o serviço que você oferece).';
-      }
-      if(!filtered.length){
-        setResults('<div class="no-results">Nenhum lead qualificado encontrado após o filtro.<br/>Tente outro segmento ou outra cidade.</div>');
-        return;
-      }
-      renderResults(filtered);
-    })
-    .catch(function(){setStatus('Erro na busca. Tente novamente em instantes.');});
+    var waNum=phone.replace(/[^0-9]/g,'');
+    var waFull=waNum.startsWith('55')?waNum:'55'+waNum;
+    var waMsg=meta.waMsg(name);
+    var waLink='https://wa.me/'+waFull+'?text='+encodeURIComponent(waMsg);
+
+    var btns='';
+    if(phone)btns+='<a class="result-btn wa" href="'+waLink+'" target="_blank" rel="noopener">💬 WhatsApp</a>';
+    if(phone)btns+='<a class="result-btn tel" href="tel:'+escHtml(phone)+'">📞 Ligar</a>';
+    if(website)btns+='<a class="result-btn web" href="'+safeUrl(website)+'" target="_blank" rel="noopener">🌐 Site</a>';
+
+    return '<div class="result-card">'
+      +'<div class="result-name">'+escHtml(name)+'</div>'
+      +(addr?'<div class="result-addr">📍 '+escHtml(addr)+'</div>':'')
+      +'<div class="result-tags">'+tags.map(function(tg){return '<span class="result-tag '+tg.cls+'">'+escHtml(tg.txt)+'</span>';}).join('')+'</div>'
+      +'<div class="result-contact">'+btns+'</div>'
+      +'</div>';
+  }).join('');
+  setResults(html);
 }
 
 function renderResults(elements){
