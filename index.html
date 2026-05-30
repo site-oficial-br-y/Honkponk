@@ -364,10 +364,12 @@ footer{padding:48px 24px 32px;background:rgba(8,8,16,.95);border-top:1px solid r
     <a href="#busca">Buscar leads</a>
     <a href="#features">Recursos</a>
     <a href="#cta">Preços</a>
-    <a href="https://instagram.com/honponk.oficial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px">📸 Instagram</a>
-    <a href="https://tiktok.com/@honk.ponk1" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px">🎵 TikTok</a>
   </div>
-  <a href="#busca" class="nav-cta" onclick="openQuiz(event)">Começar grátis →</a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="https://www.instagram.com/honkponk.oficial" target="_blank" rel="noopener" title="Instagram"><img src="https://site-oficial-br-y.github.io/Honkponk/instagram.png" style="width:26px;height:26px;object-fit:contain;vertical-align:middle"/></a>
+    <a href="https://tiktok.com/@honk.ponk1" target="_blank" rel="noopener" title="TikTok"><img src="https://site-oficial-br-y.github.io/Honkponk/tiktok.png" style="width:26px;height:26px;object-fit:contain;vertical-align:middle"/></a>
+    <a href="#busca" class="nav-cta" onclick="openQuiz(event)">Começar grátis →</a>
+  </div>
 </nav>
 
 <!-- ── QUIZ OVERLAY ── -->
@@ -778,14 +780,13 @@ footer{padding:48px 24px 32px;background:rgba(8,8,16,.95);border-top:1px solid r
 <!-- ── CTA ── -->
 <section class="cta-section" id="cta">
   <div class="container reveal">
-    <span class="section-tag">Acesso antecipado</span>
-    <h2 class="section-title">Comece a prospectar<br/><span style="background:linear-gradient(135deg,var(--pink),var(--pink-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ainda hoje.</span></h2>
-    <p class="section-sub">Cadastre seu e-mail e receba acesso antecipado com desconto exclusivo de early adopter.</p>
+    <h2 class="section-title">Fique por dentro<br/><span style="background:linear-gradient(135deg,var(--pink),var(--pink-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">das novidades.</span></h2>
+    <p class="section-sub">Cadastre seu e-mail e receba atualizações da Honk Ponk.</p>
     <form class="email-form" id="emailForm" onsubmit="submitEmail(event)">
       <input type="email" class="email-input" id="emailInput" placeholder="seu@email.com" required/>
-      <button type="submit" class="email-submit">Quero acesso grátis →</button>
+      <button type="submit" class="email-submit">Cadastrar →</button>
     </form>
-    <div class="cta-note">Sem spam. Cancelamento a qualquer momento. Gratuito pra começar.</div>
+    <div class="cta-note">Sem spam. Cancelamento a qualquer momento.</div>
     <div id="formMsg"></div>
   </div>
 </section>
@@ -811,7 +812,7 @@ footer{padding:48px 24px 32px;background:rgba(8,8,16,.95);border-top:1px solid r
     <div class="footer-links">
       <h4>Empresa</h4>
       <ul>
-        <li><a href="#cta">Acesso antecipado</a></li>
+        <li><a href="#cta">Newsletter</a></li>
         <li><a href="mailto:honkponkoficial@gmail.com">Contato</a></li>
       </ul>
     </div>
@@ -1204,17 +1205,17 @@ function submitEmail(e){
   var btn=e.target.querySelector('button[type=submit]');
   if(!email){msg.textContent='Digite seu e-mail.';return;}
   btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
-  fetch('https://formspree.io/f/SUBSTITUA_PELO_SEU_ID',{
+  fetch('https://api.web3forms.com/submit',{
     method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify({email:email,source:'honkponk-landing'})
+    body:JSON.stringify({access_key:'886d635d-f949-4a6d-b349-e11fdfa5463f',email:email,subject:'Novo cadastro Honk Ponk',from_name:'Honk Ponk Site'})
   })
   .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
   .then(function(res){
-    btn.disabled=false;btn.textContent='Quero acesso grátis →';
+    btn.disabled=false;btn.textContent='Cadastrar →';
     if(res.ok){
       document.getElementById('emailForm').style.display='none';
       msg.style.color='#4ade80';
-      msg.textContent='✓ Perfeito! Você está na lista. Te avisamos em breve.';
+      msg.textContent='✓ Cadastrado! Obrigado.';
     }else{msg.textContent='Erro ao enviar. Tente novamente.';}
   })
   .catch(function(){
