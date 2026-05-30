@@ -364,6 +364,8 @@ footer{padding:48px 24px 32px;background:rgba(8,8,16,.95);border-top:1px solid r
     <a href="#busca">Buscar leads</a>
     <a href="#features">Recursos</a>
     <a href="#cta">Preços</a>
+    <a href="https://instagram.com/honponk.oficial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px">📸 Instagram</a>
+    <a href="https://tiktok.com/@honk.ponk1" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px">🎵 TikTok</a>
   </div>
   <a href="#busca" class="nav-cta" onclick="openQuiz(event)">Começar grátis →</a>
 </nav>
@@ -1098,7 +1100,7 @@ function renderResultsGP(places){
     var waMsg=meta.waMsg(name);
     var waLink='https://wa.me/'+waFull+'?text='+encodeURIComponent(waMsg);
 
-    var igSearch='https://www.instagram.com/explore/search/?q='+encodeURIComponent(name);
+    var igSearch='https://www.google.com/search?q='+encodeURIComponent(name+' instagram');
     var btns='';
     if(phone)btns+='<a class="result-btn wa" href="'+waLink+'" target="_blank" rel="noopener">💬 WhatsApp</a>';
     btns+='<a class="result-btn ig" href="'+igSearch+'" target="_blank" rel="noopener">📸 Instagram</a>';
